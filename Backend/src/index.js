@@ -26,9 +26,10 @@ if(process.env.NODE_ENV==="production"){
     app.use(express.static(path.join(__dirname, "../Frontend/dist")));
     
 
-    app.get("*",(req,res)=>{
-        res.sendFile(path.join(__dirname, "../Frontend","dist","index.html"));
-    })
+    app.get(/(.*)/, (req, res, next) => {
+        // Express 5 wildcard fix: catch all GET requests
+        res.sendFile(path.join(__dirname, "../Frontend", "dist", "index.html"));
+    });
 }
 
 
