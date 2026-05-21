@@ -3,7 +3,9 @@ import bcrypt from "bcryptjs";
 import {generateToken} from "../lib/utils.js"
 import cloudinary from "../lib/cloudinary.js";
 export const signup = async (req,res)=>{
-    const {fullName,email,password} = req.body;
+    const {fullName, password} = req.body;
+    let {email} = req.body;
+    if (email) email = email.trim().toLowerCase();
     try {
        
         if(password.length<6){
@@ -14,11 +16,13 @@ export const signup = async (req,res)=>{
         }
 
         const user = await User.findOne({email})
+        console.log("Existing user search result:", user ? "User found" : "No user found");
         
         if (user) return res.status(400).json({message: "Email already exist"});
 
         const salt = await bcrypt.genSalt(10)
         const hashedPassword = await bcrypt.hash(password,salt);
+        console.log("Password hashed successfully");
 
         const newUser = new User({
             fullName,
@@ -26,8 +30,11 @@ export const signup = async (req,res)=>{
             password: hashedPassword
         })
         if(newUser){
+            console.log("Generating token...");
             generateToken(newUser._id,res)
+            console.log("Token generated, saving user...");
             await newUser.save();
+            console.log("User saved successfully");
 
             res.status(201).json({
                 _id:newUser._id,
@@ -46,7 +53,9 @@ export const signup = async (req,res)=>{
 }
 
 export const login = async (req,res)=>{
-    const {email , password} = req.body
+    const { password } = req.body;
+    let { email } = req.body;
+    if (email) email = email.trim().toLowerCase();
     try {
         const user = await User.findOne({email})
 
